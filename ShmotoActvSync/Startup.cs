@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace ShmotoActvSync
 {
@@ -27,6 +28,7 @@ namespace ShmotoActvSync
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddAuthentication(options => options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme);
             // Add framework services.
             services.AddMvc();
         }
@@ -48,6 +50,24 @@ namespace ShmotoActvSync
             }
 
             app.UseStaticFiles();
+
+            app.UseCookieAuthentication(new CookieAuthenticationOptions
+            {
+                AuthenticationScheme = "Cookies",
+                AutomaticAuthenticate = true,
+                AutomaticChallenge = true,
+            });
+
+            app.UseOAuthAuthentication(new OAuthOptions {
+                AuthenticationScheme = "Strava",
+                ClientId = "5772",
+                ClientSecret = "4dee57ffb053d47bf2bceab72c97060cf1f1133b",
+                CallbackPath = new Microsoft.AspNetCore.Http.PathString("/strava/callback"),
+                AuthorizationEndpoint = "https://www.strava.com/oauth/authorize",
+                TokenEndpoint = "https://www.strava.com/oauth/token",
+                Scope = { "write" },
+                SignInScheme = "Cookies"
+            });
 
             app.UseMvc(routes =>
             {
