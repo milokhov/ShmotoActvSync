@@ -4,39 +4,38 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using ShmotoActvSync.ViewModels;
+using ShmotoActvSync.Services;
 
 namespace ShmotoActvSync.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
+        private IDbService dbService;
+
+        public HomeController(IDbService dbService)
+        {
+            this.dbService = dbService;
+        }
+
         public IActionResult Index()
         {
-            return View();
+            var user = dbService.FindUserByStravaId(long.Parse(HttpContext.User.FindFirst("strava_id").Value));
+            var viewModel = new UserViewModel
+            {
+                UserName = user.StravaUserName
+            };
+            return View(viewModel);
         }
 
-        public IActionResult About()
+        [Route("link")]
+        [HttpPost]
+        public IActionResult Link(string username, string password)
         {
-            ViewData["Message"] = "Your application description page.";
-
-            return View();
-        }
-
-        public IActionResult Contact()
-        {
-            ViewData["Message"] = "Your contact page.";
-
-            return View();
-        }
-
-        public IActionResult Error()
-        {
-            return View();
-        }
-
-        [Authorize]
-        public IActionResult Test()
-        {
-            return View();
+            // TODO - link
+            return RedirectToAction("Index");
         }
     }
 }

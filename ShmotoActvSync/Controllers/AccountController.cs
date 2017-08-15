@@ -32,7 +32,7 @@ namespace ShmotoActvSync.Controllers
             if (returnUrl != null)
                 return new LocalRedirectResult(returnUrl);
             else
-                return RedirectToAction("Home", "Index");
+                return RedirectToAction("Index", "Home");
         }
 
     }

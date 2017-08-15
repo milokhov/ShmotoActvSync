@@ -8,6 +8,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OAuth;
+using System.Net.Http;
+using System.Security.Claims;
+using ShmotoActvSync.Services;
 
 namespace ShmotoActvSync
 {
@@ -28,6 +32,7 @@ namespace ShmotoActvSync
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddTransient<IDbService, DbService>();
             services.AddAuthentication(options => options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme);
             // Add framework services.
             services.AddMvc();
@@ -42,7 +47,6 @@ namespace ShmotoActvSync
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseBrowserLink();
             }
             else
             {
@@ -56,6 +60,8 @@ namespace ShmotoActvSync
                 AuthenticationScheme = "Cookies",
                 AutomaticAuthenticate = true,
                 AutomaticChallenge = true,
+                ExpireTimeSpan = TimeSpan.FromDays(30),
+                SlidingExpiration = true
             });
 
             app.UseOAuthAuthentication(new OAuthOptions {
@@ -66,7 +72,21 @@ namespace ShmotoActvSync
                 AuthorizationEndpoint = "https://www.strava.com/oauth/authorize",
                 TokenEndpoint = "https://www.strava.com/oauth/token",
                 Scope = { "write" },
-                SignInScheme = "Cookies"
+                SignInScheme = "Cookies",
+                Events = new OAuthEvents {
+                    OnCreatingTicket = async context =>
+                    {
+                        var userName = context.TokenResponse.Response["athlete"].Value<string>("username");
+                        var id = context.TokenResponse.Response["athlete"].Value<string>("id");
+                        context.Identity.AddClaim(new Claim(ClaimTypes.Name, userName));
+                        context.Identity.AddClaim(new Claim("strava_id", id));
+                        var dbService = new DbService();
+                        dbService.AddUser(new Models.User { StravaId = long.Parse(id), StravaUserName = userName, StravaToken = context.AccessToken });
+
+                        context.Ticket.Properties.IsPersistent = true; // persistent cookie
+                    }
+                }
+                
             });
 
             app.UseMvc(routes =>
