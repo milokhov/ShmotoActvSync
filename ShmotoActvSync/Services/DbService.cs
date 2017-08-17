@@ -11,8 +11,16 @@ namespace ShmotoActvSync.Services
     public class DbService : IDbService
     {
         private const string connectionString = "litedb.db";
+        private IPasswordEncryptionService passwordEncryptionService;
+        private ICurrentUserService currentUserService;
 
-        public void AddUser(User user)
+        public DbService(IPasswordEncryptionService passwordEncryptionService, ICurrentUserService currentUserService)
+        {
+            this.passwordEncryptionService = passwordEncryptionService;
+            this.currentUserService = currentUserService;
+        }
+
+        public void AddOrUpdateUser(User user)
         {
             using (var db = new LiteRepository(connectionString))
             {
@@ -20,6 +28,9 @@ namespace ShmotoActvSync.Services
                 if (dbUser == null)
                 {
                     db.Insert(user);
+                } else
+                {
+                    db.Update(user);
                 }
 
             }
@@ -30,6 +41,17 @@ namespace ShmotoActvSync.Services
             using (var db = new LiteRepository(connectionString))
             {
                 return db.SingleOrDefault<User>(it => it.StravaId == stravaId);
+            }
+        }
+
+        public void StoreMotoActvCredentials(string username, string password)
+        {
+            using (var db = new LiteRepository(connectionString))
+            {
+                var user = db.Single<User>(it => it.StravaId == currentUserService.GetCurrentUser().StravaID);
+                user.MotoUserName = username;
+                user.MotoPassword = passwordEncryptionService.EncryptPassword(password);
+                db.Update(user);
             }
         }
     }

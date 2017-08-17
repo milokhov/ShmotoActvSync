@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.OAuth;
 using System.Net.Http;
 using System.Security.Claims;
 using ShmotoActvSync.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace ShmotoActvSync
 {
@@ -32,14 +33,19 @@ namespace ShmotoActvSync
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSession();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddTransient<IPasswordEncryptionService, PasswordEncryptionService>();
             services.AddTransient<IDbService, DbService>();
+            services.AddTransient<IMotoActvService, MotoActvService>();
+            services.AddTransient<ICurrentUserService, CurrentUserService>();
             services.AddAuthentication(options => options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme);
             // Add framework services.
             services.AddMvc();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IDbService dbService)
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
@@ -54,6 +60,7 @@ namespace ShmotoActvSync
             }
 
             app.UseStaticFiles();
+            app.UseSession();
 
             app.UseCookieAuthentication(new CookieAuthenticationOptions
             {
@@ -64,7 +71,8 @@ namespace ShmotoActvSync
                 SlidingExpiration = true
             });
 
-            app.UseOAuthAuthentication(new OAuthOptions {
+            app.UseOAuthAuthentication(new OAuthOptions
+            {
                 AuthenticationScheme = "Strava",
                 ClientId = "5772",
                 ClientSecret = "4dee57ffb053d47bf2bceab72c97060cf1f1133b",
@@ -73,20 +81,19 @@ namespace ShmotoActvSync
                 TokenEndpoint = "https://www.strava.com/oauth/token",
                 Scope = { "write" },
                 SignInScheme = "Cookies",
-                Events = new OAuthEvents {
-                    OnCreatingTicket = async context =>
-                    {
-                        var userName = context.TokenResponse.Response["athlete"].Value<string>("username");
-                        var id = context.TokenResponse.Response["athlete"].Value<string>("id");
-                        context.Identity.AddClaim(new Claim(ClaimTypes.Name, userName));
-                        context.Identity.AddClaim(new Claim("strava_id", id));
-                        var dbService = new DbService();
-                        dbService.AddUser(new Models.User { StravaId = long.Parse(id), StravaUserName = userName, StravaToken = context.AccessToken });
-
-                        context.Ticket.Properties.IsPersistent = true; // persistent cookie
-                    }
+                Events = new OAuthEvents
+                {
+                    OnCreatingTicket = async context => await Task.Run(() =>
+                   {
+                       var userName = context.TokenResponse.Response["athlete"].Value<string>("username");
+                       var id = context.TokenResponse.Response["athlete"].Value<string>("id");
+                       context.Identity.AddClaim(new Claim(ClaimTypes.Name, userName));
+                       context.Identity.AddClaim(new Claim("strava_id", id));
+                       dbService.AddOrUpdateUser(new Models.User { StravaId = long.Parse(id), StravaUserName = userName, StravaToken = context.AccessToken });
+                       context.Ticket.Properties.IsPersistent = true; // persistent cookie
+                    })
                 }
-                
+
             });
 
             app.UseMvc(routes =>

@@ -4,7 +4,8 @@ namespace ShmotoActvSync.Services
 {
     public interface IDbService
     {
-        void AddUser(User user);
+        void AddOrUpdateUser(User user);
         User FindUserByStravaId(long stravaId);
+        void StoreMotoActvCredentials(string username, string password);
     }
 }

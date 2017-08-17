@@ -11,18 +11,40 @@
 
     @if (Model.AssociatedToMoto)
     {
-
-
-    } else
+        <h4 class="bg-success">You have linked MotoActv account</h4>
+        <div class="panel panel-default">
+            <div class="panel-heading">MotoActv credentials</div>
+            <div class="panel-body">
+                <form action="unlink" method="post">
+                    <div class="form-group">
+                        <label>Login</label>
+                        <input type="email" class="form-control" disabled value="@Model.MotoUserName" />
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" class="form-control" disabled value="*****" />
+                    </div>
+                    <input type="submit" class="btn btn-danger" value="Unlink" />
+                </form>
+            </div>
+        </div>
+    }
+    else
     {
         <h3>You have not associated your MotoActv account yet</h3>
+
+        @if (TempData.ContainsKey("Error"))
+        {
+            <p class="bg-danger">@TempData["Error"]</p>
+        }
+
         <div class="panel panel-default">
             <div class="panel-heading">MotoActv login</div>
             <div class="panel-body">
                 <form action="link" method="post">
                     <div class="form-group">
                         <label>Login</label>
-                        <input type="email" class="form-control" name="name" placeholder="Enter email here" />
+                        <input type="email" class="form-control" name="username" placeholder="Enter email here" />
                     </div>
                     <div class="form-group">
                         <label>Password</label>
