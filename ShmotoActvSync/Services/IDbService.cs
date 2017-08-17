@@ -7,5 +7,6 @@ namespace ShmotoActvSync.Services
         void AddOrUpdateUser(User user);
         User FindUserByStravaId(long stravaId);
         void StoreMotoActvCredentials(string username, string password);
+        void ResetMotoActvCredentials();
     }
 }

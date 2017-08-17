@@ -49,5 +49,13 @@ namespace ShmotoActvSync.Controllers
             }
             return RedirectToAction("Index");
         }
+
+        [Route("unlink")]
+        [HttpPost]
+        public IActionResult UnLink()
+        {
+            dbService.ResetMotoActvCredentials();
+            return RedirectToAction("Index");
+        }
     }
 }
