@@ -25,6 +25,10 @@ namespace ShmotoActvSync
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
+            if (env.IsDevelopment())
+            {
+                builder.AddUserSecrets<Startup>();
+            }
             Configuration = builder.Build();
         }
 
@@ -76,8 +80,8 @@ namespace ShmotoActvSync
             {
                 AuthenticationScheme = "Strava",
                 ClientId = "5772",
-                ClientSecret = "4dee57ffb053d47bf2bceab72c97060cf1f1133b",
-                CallbackPath = new Microsoft.AspNetCore.Http.PathString("/strava/callback"),
+                ClientSecret = Configuration["StravaClientSecret"],
+                CallbackPath = new PathString("/strava/callback"),
                 AuthorizationEndpoint = "https://www.strava.com/oauth/authorize",
                 TokenEndpoint = "https://www.strava.com/oauth/token",
                 Scope = { "write" },
