@@ -55,6 +55,15 @@ namespace ShmotoActvSync.Services
             }
         }
 
+        public (string username, string password) RetrieveMotoActvCredentials()
+        {
+            using (var db = new LiteRepository(connectionString))
+            {
+                var user = db.Single<User>(it => it.StravaId == currentUserService.GetCurrentUser().StravaID);
+                return (user.MotoUserName, passwordEncryptionService.DecryptPassword(user.MotoPassword));
+            }
+        }
+
         public void StoreMotoActvCredentials(string username, string password)
         {
             using (var db = new LiteRepository(connectionString))

@@ -57,5 +57,14 @@ namespace ShmotoActvSync.Controllers
             dbService.ResetMotoActvCredentials();
             return RedirectToAction("Index");
         }
+
+        [Route("sync")]
+        [HttpPost]
+        public async Task<IActionResult> SyncAsync()
+        {
+            var workouts = await motoActvService.GetRecentWorkouts();
+            await motoActvService.RetrieveWorkout(workouts.Workouts[0].WorkoutActivityId);
+            return RedirectToAction("Index");
+        }
     }
 }

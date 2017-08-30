@@ -44,6 +44,7 @@ namespace ShmotoActvSync
             services.AddTransient<IDbService, DbService>();
             services.AddTransient<IMotoActvService, MotoActvService>();
             services.AddTransient<ICurrentUserService, CurrentUserService>();
+            services.AddTransient<IMotoActvCredentialsProvider, MotoActvCredentialsProvider>();
             services.AddAuthentication(options => options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme);
             // Add framework services.
             services.AddMvc();
