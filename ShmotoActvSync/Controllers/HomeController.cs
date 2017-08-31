@@ -15,11 +15,13 @@ namespace ShmotoActvSync.Controllers
     {
         private IDbService dbService;
         private IMotoActvService motoActvService;
+        private readonly IStravaService stravaService;
 
-        public HomeController(IDbService dbService, IMotoActvService motoActvService)
+        public HomeController(IDbService dbService, IMotoActvService motoActvService, IStravaService stravaService)
         {
             this.dbService = dbService;
             this.motoActvService = motoActvService;
+            this.stravaService = stravaService;
         }
 
         public IActionResult Index()
@@ -63,7 +65,10 @@ namespace ShmotoActvSync.Controllers
         public async Task<IActionResult> SyncAsync()
         {
             var workouts = await motoActvService.GetRecentWorkouts();
-            await motoActvService.RetrieveWorkout(workouts.Workouts[0].WorkoutActivityId);
+            var workout = await motoActvService.RetrieveWorkout(workouts.Workouts[0].WorkoutActivityId);
+            workout.Seek(0, System.IO.SeekOrigin.Begin);
+            await stravaService.UploadActivity(workout, "activity.tcx", workouts.Workouts[0].WorkoutActivityId);
+
             return RedirectToAction("Index");
         }
     }

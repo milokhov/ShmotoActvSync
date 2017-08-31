@@ -44,6 +44,14 @@ namespace ShmotoActvSync.Services
             }
         }
 
+        public User GetCurrentUser()
+        {
+            using (var db = new LiteRepository(connectionString))
+            {
+                return db.Single<User>(it => it.StravaId == currentUserService.GetCurrentUser().StravaID);
+            }
+        }
+
         public void ResetMotoActvCredentials()
         {
             using (var db = new LiteRepository(connectionString))

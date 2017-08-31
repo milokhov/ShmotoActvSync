@@ -9,5 +9,6 @@ namespace ShmotoActvSync.Services
         void StoreMotoActvCredentials(string username, string password);
         void ResetMotoActvCredentials();
         (string username, string password) RetrieveMotoActvCredentials();
+        User GetCurrentUser();
     }
 }

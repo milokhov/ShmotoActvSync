@@ -45,6 +45,7 @@ namespace ShmotoActvSync
             services.AddTransient<IMotoActvService, MotoActvService>();
             services.AddTransient<ICurrentUserService, CurrentUserService>();
             services.AddTransient<IMotoActvCredentialsProvider, MotoActvCredentialsProvider>();
+            services.AddTransient<IStravaService, StravaService>();
             services.AddAuthentication(options => options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme);
             // Add framework services.
             services.AddMvc();
