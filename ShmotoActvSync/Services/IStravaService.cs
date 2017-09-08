@@ -6,6 +6,6 @@ namespace ShmotoActvSync.Services
     public interface IStravaService
     {
 
-        Task UploadActivity(Stream stream, string fileName, string activityId);
+        Task<UploadActivityResult> UploadActivity(Stream stream, string fileName, string activityId);
     }
 }

@@ -81,17 +81,23 @@ namespace ShmotoActvSync.Services
             }
         }
 
-        public async Task<MotoActvWorkouts> GetRecentWorkouts()
+        public async Task<MotoActvWorkouts> GetWorkouts(DateTime startDate, DateTime endDate)
         {
             var client = await PrepareSession();
             var response = await client.PostAsync($"{motoUrl}/data/pastAllWorkouts/2.json", new FormUrlEncodedContent(
                 new Dictionary<string, string> {
                     { "getall", "yep" },
-                    { "endDate", DateTimeOffset.Now.AddYears(1).ToUnixTimeMilliseconds().ToString() },
+                    { "startDate", new DateTimeOffset(startDate).ToUnixTimeMilliseconds().ToString() },
+                    { "endDate", new DateTimeOffset(endDate).ToUnixTimeMilliseconds().ToString() },
                 }
                 ));
             var responseObj = JsonConvert.DeserializeObject<MotoActvWorkouts>(await response.Content.ReadAsStringAsync());
             return responseObj;
+        }
+
+        public async Task<MotoActvWorkouts> GetRecentWorkouts()
+        {
+            return await GetWorkouts(DateTime.Now.AddDays(-30), DateTime.Now.AddYears(1));
         }
 
         public async Task<Stream> RetrieveWorkout(string workoutId)

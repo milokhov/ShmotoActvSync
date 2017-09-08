@@ -65,9 +65,9 @@ namespace ShmotoActvSync.Controllers
         public async Task<IActionResult> SyncAsync()
         {
             var workouts = await motoActvService.GetRecentWorkouts();
-            var workout = await motoActvService.RetrieveWorkout(workouts.Workouts[0].WorkoutActivityId);
-            workout.Seek(0, System.IO.SeekOrigin.Begin);
-            await stravaService.UploadActivity(workout, "activity.tcx", workouts.Workouts[0].WorkoutActivityId);
+            //var workout = await motoActvService.RetrieveWorkout(workouts.Workouts[0].WorkoutActivityId);
+            //workout.Seek(0, System.IO.SeekOrigin.Begin);
+            //await stravaService.UploadActivity(workout, "activity.tcx", workouts.Workouts[0].WorkoutActivityId);
 
             return RedirectToAction("Index");
         }
