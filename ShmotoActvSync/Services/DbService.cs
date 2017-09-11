@@ -97,7 +97,19 @@ namespace ShmotoActvSync.Services
 
         public void UpdateSyncStatus(User user, Exception e)
         {
-            throw new NotImplementedException();
+            using (var db = new LiteRepository(connectionString))
+            {
+                user.LastSyncedDate = DateTime.Now;
+                user.LastSyncStatus = $"Failed, error: {e.Message}";
+            }
+        }
+        public void UpdateSyncStatus(User user)
+        {
+            using (var db = new LiteRepository(connectionString))
+            {
+                user.LastSyncedDate = DateTime.Now;
+                user.LastSyncStatus = $"Success";
+            }
         }
     }
 }

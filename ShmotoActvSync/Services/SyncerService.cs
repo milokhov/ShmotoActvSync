@@ -12,6 +12,7 @@ namespace ShmotoActvSync.Services
         private readonly IMotoActvService motoActvService;
         private readonly IStravaService stravaService;
         private readonly ICurrentUserService currentUserService;
+        private TimeSpan syncTimespan = TimeSpan.FromHours(1);
 
         public SyncerService(IDbService dbService, IMotoActvService motoActvService, IStravaService stravaService, ICurrentUserService currentUserService)
         {
@@ -25,7 +26,7 @@ namespace ShmotoActvSync.Services
         {
             var user = dbService.GetLeastRecentSyncedUser();
             // Don't sync if last one was less than 4 hours ago
-            if (user.LastSyncedDate.HasValue && DateTime.Now - user.LastSyncedDate.Value < TimeSpan.FromHours(4)) return;
+            if (user.LastSyncedDate.HasValue && DateTime.Now - user.LastSyncedDate.Value < TimeSpan.FromHours(1)) return;
 
             currentUserService.OverrideCurrentUser(new CurrentUserInfo
             {
@@ -37,15 +38,20 @@ namespace ShmotoActvSync.Services
             {
                 await UpdateSyncedActivities(user);
                 var syncedActivityId = await SyncActivityForUser(user);
-
-                //dbService.UpdateSyncStatus(user);
+                if (!string.IsNullOrEmpty(syncedActivityId)) AddSyncedActivity(user, syncedActivityId);
+                dbService.UpdateSyncStatus(user);
             }
             catch (Exception e)
             {
-                // TODO
                 dbService.UpdateSyncStatus(user, e);
-                // Log
+                throw;
             }
+        }
+
+        private void AddSyncedActivity(User user, string syncedActivityId)
+        {
+            user.SyncedActivities = user.SyncedActivities.Union(new[] { syncedActivityId }).ToArray();
+            dbService.AddOrUpdateUser(user);
         }
 
         private async Task UpdateSyncedActivities(User user)

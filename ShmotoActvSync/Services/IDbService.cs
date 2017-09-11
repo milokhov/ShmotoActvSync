@@ -13,5 +13,6 @@ namespace ShmotoActvSync.Services
         User GetCurrentUser();
         User GetLeastRecentSyncedUser();
         void UpdateSyncStatus(User user, Exception e);
+        void UpdateSyncStatus(User user);
     }
 }

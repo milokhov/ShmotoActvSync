@@ -20,10 +20,10 @@ namespace ShmotoActvSync.Controllers
 
         [Route("sync/sync")]
         [HttpPost]
-        public async Task<object> Sync()
+        public async Task<ActionResult> Sync()
         {
             await syncerService.Sync();
-            return new { Success = "true" };
+            return new JsonResult(new { Success = "true" });
         }
     }
 }

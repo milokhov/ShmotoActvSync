@@ -14,6 +14,7 @@ namespace ShmotoActvSync.Models
         public string MotoUserName { get; set; }
         public string MotoPassword { get; set; }
         public DateTime? LastSyncedDate { get; set; }
+        public string LastSyncStatus { get; set; }
         public string[] SyncedActivities { get; set; }
     }
 }
