@@ -34,6 +34,25 @@ namespace ShmotoActvSync.Services
             var result = JsonConvert.DeserializeAnonymousType(resultStr, new { id = 0L, error = "" });
             return new UploadActivityResult { Id = result.id, Error = result.error };
         }
+
+        public async Task<IEnumerable<AthleteActivity>> GetAthleteActivities()
+        {
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
+            var response = await client.GetStringAsync($"https://www.strava.com/api/v3/athlete/activities");
+            return JsonConvert.DeserializeObject<AthleteActivity[]>(response);
+        }
+
+    }
+
+    public class AthleteActivity
+    {
+        [JsonProperty("id")]
+        public long Id { get; set; }
+        [JsonProperty("name")]
+        public string Name { get; set; }
+        [JsonProperty("external_id")]
+        public string ExternalId { get; set; }
     }
 
     public class UploadActivityResult

@@ -122,6 +122,7 @@ namespace ShmotoActvSync.Services
                         var entryFileName = zipEntry.Name;
                         var stream = new MemoryStream();
                         zipInputStream.CopyTo(stream);
+                        stream.Seek(0, SeekOrigin.Begin);
                         return stream;
                         //using (var reader = new StreamReader(zipInputStream, Encoding.UTF8))
                         //{

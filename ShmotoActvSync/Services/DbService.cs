@@ -28,7 +28,8 @@ namespace ShmotoActvSync.Services
                 if (dbUser == null)
                 {
                     db.Insert(user);
-                } else
+                }
+                else
                 {
                     db.Update(user);
                 }
@@ -49,6 +50,17 @@ namespace ShmotoActvSync.Services
             using (var db = new LiteRepository(connectionString))
             {
                 return db.Single<User>(it => it.StravaId == currentUserService.GetCurrentUser().StravaID);
+            }
+        }
+
+        public User GetLeastRecentSyncedUser()
+        {
+            using (var db = new LiteRepository(connectionString))
+            {
+                var user = db.Query<User>().Where(it => it.LastSyncedDate == null).FirstOrDefault();
+                if (user != null) return user;
+                user = db.Query<User>().ToArray().OrderBy(it => it.LastSyncedDate).FirstOrDefault();
+                return user;
             }
         }
 
@@ -81,6 +93,11 @@ namespace ShmotoActvSync.Services
                 user.MotoPassword = passwordEncryptionService.EncryptPassword(password);
                 db.Update(user);
             }
+        }
+
+        public void UpdateSyncStatus(User user, Exception e)
+        {
+            throw new NotImplementedException();
         }
     }
 }

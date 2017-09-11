@@ -10,6 +10,7 @@ namespace ShmotoActvSync.Services
     public class CurrentUserService : ICurrentUserService
     {
         private IHttpContextAccessor httpContext;
+        private CurrentUserInfo currentUserInfo;
 
         public CurrentUserService(IHttpContextAccessor httpContext)
         {
@@ -18,6 +19,7 @@ namespace ShmotoActvSync.Services
 
         public CurrentUserInfo GetCurrentUser()
         {
+            if (currentUserInfo != null) return currentUserInfo;
             if (!httpContext.HttpContext.User.HasClaim(it => it.Type == "strava_id"))
             {
                 throw new InvalidAuthenticationException("Required claim not found");
@@ -27,6 +29,11 @@ namespace ShmotoActvSync.Services
                 StravaID = long.Parse(httpContext.HttpContext.User.FindFirst("strava_id").Value),
                 StravaLogin = httpContext.HttpContext.User.FindFirst(ClaimTypes.Name).Value
             };
+        }
+
+        public void OverrideCurrentUser(CurrentUserInfo currentUserInfo)
+        {
+            this.currentUserInfo = currentUserInfo;
         }
     }
 

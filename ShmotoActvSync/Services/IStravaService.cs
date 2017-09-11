@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace ShmotoActvSync.Services
@@ -7,5 +9,6 @@ namespace ShmotoActvSync.Services
     {
 
         Task<UploadActivityResult> UploadActivity(Stream stream, string fileName, string activityId);
+        Task<IEnumerable<AthleteActivity>> GetAthleteActivities();
     }
 }

@@ -1,4 +1,5 @@
-﻿using ShmotoActvSync.Models;
+﻿using System;
+using ShmotoActvSync.Models;
 
 namespace ShmotoActvSync.Services
 {
@@ -10,5 +11,7 @@ namespace ShmotoActvSync.Services
         void ResetMotoActvCredentials();
         (string username, string password) RetrieveMotoActvCredentials();
         User GetCurrentUser();
+        User GetLeastRecentSyncedUser();
+        void UpdateSyncStatus(User user, Exception e);
     }
 }

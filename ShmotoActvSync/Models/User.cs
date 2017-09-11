@@ -11,8 +11,9 @@ namespace ShmotoActvSync.Models
         public string StravaUserName { get; set; }
         public long StravaId { get; set; }
         public string StravaToken { get; set; }
-
         public string MotoUserName { get; set; }
         public string MotoPassword { get; set; }
+        public DateTime? LastSyncedDate { get; set; }
+        public string[] SyncedActivities { get; set; }
     }
 }
