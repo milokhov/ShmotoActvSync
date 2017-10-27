@@ -22,8 +22,14 @@ namespace ShmotoActvSync.Controllers
         [HttpPost]
         public async Task<ActionResult> Sync()
         {
-            await syncerService.Sync();
-            return new JsonResult(new { Success = "true" });
+            var result = await syncerService.Sync();
+            return new JsonResult(new
+            {
+                Success = "true",
+                SyncedUser = result?.UserName,
+                SyncedWorkoutId = result?.WorkoutId,
+                SyncedWorkoutDate = result?.ActivityDate
+            });
         }
     }
 }

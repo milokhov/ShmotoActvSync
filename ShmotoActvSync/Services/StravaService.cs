@@ -28,11 +28,10 @@ namespace ShmotoActvSync.Services
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
             var content = new MultipartFormDataContent();
             content.Add(new StreamContent(stream), "file", fileName);
-            var response = await client.PostAsync($"https://www.strava.com/api/v3/uploads?data_type=tcx&private=1&external_id={activityId}", content);
-            response.EnsureSuccessStatusCode();
+            var response = await client.PostAsync($"https://www.strava.com/api/v3/uploads?data_type=tcx&external_id={Uri.EscapeDataString(activityId)}", content);
             var resultStr = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeAnonymousType(resultStr, new { id = 0L, error = "" });
-            return new UploadActivityResult { Id = result.id, Error = result.error };
+            return new UploadActivityResult { Id = result.id, Error = result.error, Success = response.IsSuccessStatusCode };
         }
 
         public async Task<IEnumerable<AthleteActivity>> GetAthleteActivities()
@@ -59,5 +58,6 @@ namespace ShmotoActvSync.Services
     {
         public long Id { get; set; }
         public string Error { get; set; }
+        public bool Success { get; set; }
     }
 }

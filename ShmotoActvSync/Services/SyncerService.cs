@@ -22,11 +22,12 @@ namespace ShmotoActvSync.Services
             this.currentUserService = currentUserService;
         }
 
-        public async Task Sync()
+        public async Task<SyncResult> Sync()
         {
             var user = dbService.GetLeastRecentSyncedUser();
             // Don't sync if last one was less than 4 hours ago
-            if (user.LastSyncedDate.HasValue && DateTime.Now - user.LastSyncedDate.Value < TimeSpan.FromHours(1)) return;
+            if (!user.AdditionalSyncPending && (user.LastSyncedDate.HasValue && DateTime.Now - user.LastSyncedDate.Value < TimeSpan.FromHours(4))) return null;
+            if (user.AdditionalSyncPending && (user.LastSyncedDate.HasValue && DateTime.Now - user.LastSyncedDate.Value < TimeSpan.FromMinutes(5))) return null;
 
             currentUserService.OverrideCurrentUser(new CurrentUserInfo
             {
@@ -37,9 +38,10 @@ namespace ShmotoActvSync.Services
             try
             {
                 await UpdateSyncedActivities(user);
-                var syncedActivityId = await SyncActivityForUser(user);
-                if (!string.IsNullOrEmpty(syncedActivityId)) AddSyncedActivity(user, syncedActivityId);
-                dbService.UpdateSyncStatus(user);
+                var syncedActivity = await SyncActivityForUser(user);
+                if (syncedActivity.Workout!=null) AddSyncedActivity(user, syncedActivity.Workout.WorkoutActivityId);
+                dbService.UpdateSyncStatus(user, syncedActivity.More);
+                return new SyncResult { UserName = user.StravaUserName, WorkoutId = syncedActivity.Workout?.WorkoutActivityId, ActivityDate = syncedActivity.Workout?.StartTime };
             }
             catch (Exception e)
             {
@@ -57,24 +59,38 @@ namespace ShmotoActvSync.Services
         private async Task UpdateSyncedActivities(User user)
         {
             var activities = await stravaService.GetAthleteActivities();
-            user.SyncedActivities = activities.Where(it => it.ExternalId != null && it.ExternalId.EndsWith(".tcx"))
+            user.SyncedActivities = user.SyncedActivities.Union(activities.Where(it => it.ExternalId != null && it.ExternalId.EndsWith(".tcx"))
                 .Select(it => it.ExternalId.Substring(0, it.ExternalId.Length - 4))
-                .ToArray();
+                ).Distinct().ToArray();
             dbService.AddOrUpdateUser(user);
         }
 
-        private async Task<string> SyncActivityForUser(User user)
+        private async Task<(MotoActvWorkout Workout, bool More)> SyncActivityForUser(User user)
         {
-            var recentWorkouts = await motoActvService.GetWorkouts(DateTime.Now.AddDays(-30), DateTime.Now); // activities from last 30 days
-            var workoutIdToSync = recentWorkouts.Workouts
+            var recentWorkouts = await motoActvService.GetWorkouts(DateTime.Now.AddDays(-90), DateTime.Now); // activities from last 90 days
+            var workoutsToSync = recentWorkouts.Workouts
                     .OrderBy(it => it.StartTime)
-                    .Where(it => !user.SyncedActivities.Contains(it.WorkoutActivityId))
-                    .Select(it => it.WorkoutActivityId)
-                    .FirstOrDefault();
-            if (string.IsNullOrEmpty(workoutIdToSync)) return null;
-            var workoutStream = await motoActvService.RetrieveWorkout(workoutIdToSync);
-            //await stravaService.UploadActivity(workoutStream, "activity.tcx", workoutIdToSync);
-            return workoutIdToSync;
+                    .Where(it => !user.SyncedActivities.Contains(it.WorkoutActivityId));
+
+            var workoutToSync = workoutsToSync.FirstOrDefault();
+            if (workoutToSync==null) return (null,false);
+            var workoutStream = await motoActvService.RetrieveWorkout(workoutToSync.WorkoutActivityId);
+            var uploadResult = await stravaService.UploadActivity(workoutStream, "activity.tcx", workoutToSync.WorkoutActivityId);
+            if (!uploadResult.Success)
+            {
+                if (!uploadResult.Error.Contains("duplicate"))
+                {
+                    throw new Exception($"Error while uploading:{uploadResult.Error}");
+                }
+            }
+            return (workoutToSync, workoutsToSync.Count() > 1);
         }
+    }
+
+    public class SyncResult
+    {
+        public string UserName { get; set; }
+        public string WorkoutId { get; set; }
+        public DateTime? ActivityDate { get; set; }
     }
 }

@@ -112,7 +112,7 @@ namespace ShmotoActvSync.Services
             response.EnsureSuccessStatusCode();
             var responseObj = JsonConvert.DeserializeObject<MotoActvExport>(await response.Content.ReadAsStringAsync());
 
-            using (var exportFileStream = await client.GetStreamAsync($"{motoUrl}/export/downloadExport?exportID=" + responseObj.ExportID))
+            using (var exportFileStream = await client.GetStreamAsync($"{motoUrl}/export/downloadExport?exportID={responseObj.ExportID}"))
             {
                 using (ZipInputStream zipInputStream = new ZipInputStream(exportFileStream))
                 {
@@ -123,12 +123,15 @@ namespace ShmotoActvSync.Services
                         var stream = new MemoryStream();
                         zipInputStream.CopyTo(stream);
                         stream.Seek(0, SeekOrigin.Begin);
-                        return stream;
-                        //using (var reader = new StreamReader(zipInputStream, Encoding.UTF8))
+                        //using (var reader = new StreamReader(stream, Encoding.UTF8))
                         //{
                         //    string value = reader.ReadToEnd();
                         //    // Do something with the value
                         //}
+                        //stream.Seek(0, SeekOrigin.Begin);
+
+                        return stream;
+
                     }
                     else throw new Exception("Invalid export stream");
                 }

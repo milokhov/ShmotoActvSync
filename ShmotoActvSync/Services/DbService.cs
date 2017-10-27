@@ -100,15 +100,19 @@ namespace ShmotoActvSync.Services
             using (var db = new LiteRepository(connectionString))
             {
                 user.LastSyncedDate = DateTime.Now;
+                user.AdditionalSyncPending = false;
                 user.LastSyncStatus = $"Failed, error: {e.Message}";
+                db.Update(user);
             }
         }
-        public void UpdateSyncStatus(User user)
+        public void UpdateSyncStatus(User user, bool MorePending)
         {
             using (var db = new LiteRepository(connectionString))
             {
                 user.LastSyncedDate = DateTime.Now;
                 user.LastSyncStatus = $"Success";
+                user.AdditionalSyncPending = MorePending;
+                db.Update(user);
             }
         }
     }

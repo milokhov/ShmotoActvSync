@@ -4,6 +4,6 @@ namespace ShmotoActvSync.Services
 {
     public interface ISyncerService
     {
-        Task Sync();
+        Task<SyncResult> Sync();
     }
 }
